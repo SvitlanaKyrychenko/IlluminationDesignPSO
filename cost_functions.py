@@ -1,7 +1,4 @@
 import numpy as np
-from typing import Callable, Any
-
-from numpy import ndarray, dtype
 
 
 def euclidean_diff(sample1: float, sample2: float) -> float:
