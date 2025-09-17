@@ -1,14 +1,14 @@
 import numpy as np
 from pso import PSOConfig, PSO, OptimizeMode, CostFunctionMode
 from data_preparation import get_main_data, get_spots_reflectance
-from visualization import show_rgb_custom_illuminant
+from visualization import show_rgb_custom_illuminant, plot_spds
 
 # Test on random data
 def run_random_pso():
     rand = np.random.default_rng()
     low_bound = float(0.0)
     high_bound = float(1.0)
-    n_iterations = 500
+    n_iterations = 100
     n_wavelength = 200
 
     pso_config = PSOConfig(30, n_iterations, 0.95, 5, 5)
@@ -25,15 +25,13 @@ def run_random_pso():
     
 
 def run_pso(sample1, sample2, wavelength, led):
-    n_iterations = 500
+    n_iterations = 100
     pso_config = PSOConfig(30, n_iterations, 0.95, 5, 5)
     pso = PSO(pso_config)
     global_pos, global_cost = pso.run_pso(sample1, sample2, wavelength, led, CostFunctionMode.CIEDE, OptimizeMode.MIN)
     print(global_pos)
     print(global_cost)
     return global_pos, global_cost
-
-    
 
 
 if __name__ == '__main__':
@@ -51,8 +49,8 @@ if __name__ == '__main__':
     
     spots_reflectance = get_spots_reflectance(spots, reflectance)
     
-    # run_random_pso() Run on a rand case
+    # # run_random_pso() Run on a rand case
     global_pos, global_cost =  run_pso(spots_reflectance[0], spots_reflectance[1], ref_wavelengths, leds_spectra)
     custom_illuminant = global_pos @ leds_spectra
-    
+    plot_spds([spots_reflectance[0], spots_reflectance[1], custom_illuminant], ref_wavelengths, ["Spot 1", "Spot 2", "L optim"])
     show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant)
