@@ -1,6 +1,6 @@
 import numpy as np
 from pso import PSOConfig, PSO, OptimizeMode, CostFunctionMode
-
+from data_preparation import get_main_data, get_spots_reflectance
 
 # Test on random data
 def run_random_pso():
@@ -24,4 +24,18 @@ def run_random_pso():
 
 
 if __name__ == '__main__':
+    
+    sample_folder = "./Practical_work/Rosita_Aguirre_Plascencia/capture/"
+    sample_name = "sample_scan_0043"
+    
+    leds_folder = "./Practical_work/LED_emission_spectra/LED_emission_spectra_expTime_85ms_avg_10_spectra/"
+    
+    reflectance, ref_wavelengths, leds_spectra = get_main_data(sample_folder, sample_name, leds_folder)
+     
+    spot_orange = [290, 185] # Orange
+    spot_red = [275, 355] # Red
+    spots = [spot_orange, spot_red]
+    
+    spots_reflectance = get_spots_reflectance(spots, reflectance)
+    
     run_random_pso()
