@@ -84,7 +84,7 @@ class PSO:
 
         self.positions = self.rand.uniform(self.low_bound, self.high_bound, size=(self.config.n_particles, n_led)).astype(np.float64)
         self.apply_constrains()
-        self.velocities = self.rand.uniform(0, 0.1, size=(self.config.n_particles, n_led)).astype(np.float64)
+        self.velocities = self.rand.uniform(0, 1.0, size=(self.config.n_particles, n_led)).astype(np.float64)
         self.local_pos = self.positions.copy()
         self.local_cost = self.calculate_cost()
 
