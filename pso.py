@@ -142,13 +142,12 @@ class PSO:
     def calculate_cost(self) -> ndarray[Any, dtype[float]]:
         if self.sample1.shape != self.sample2.shape:
             raise ValueError("samples must have the same length.")
-        simulated_illuminant = self.positions[:, :, None] * self.led[None, :, :]
-        corrected_sample1 = (simulated_illuminant * self.sample1[None, None, :]).sum(axis=1)
-        corrected_sample2 = (simulated_illuminant * self.sample2[None, None, :]).sum(axis=1)
+
+        simulated_illuminants = np.array([pos @ self.led for pos in self.positions])
 
         if self.cost_mode == CostFunctionMode.CIEDE:
-            sample1_xyz = np.array([spim2XYZ(x, self.wavelength) for x in corrected_sample1])
-            sample2_xyz = np.array([spim2XYZ(x, self.wavelength) for x in corrected_sample2])
+            sample1_xyz = np.array([spim2XYZ(self.sample1, self.wavelength, sim_ill) for sim_ill in simulated_illuminants])
+            sample2_xyz = np.array([spim2XYZ(self.sample2, self.wavelength, sim_ill) for sim_ill in simulated_illuminants])
             sample1_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample1_xyz])
             sample2_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample2_xyz])
             costs = np.array([
