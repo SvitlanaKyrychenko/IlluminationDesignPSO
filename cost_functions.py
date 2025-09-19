@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def euclidean_diff(sample1: float, sample2: float) -> float:
     return float(np.linalg.norm(sample1 - sample2))
 

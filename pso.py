@@ -5,14 +5,8 @@ from typing import Any, Tuple
 import numpy as np
 
 from numpy import ndarray, dtype
-from cost_functions import ciede
-from utils import spim2rgb, spim2XYZ, XYZ2Lab
 
-
-class CostFunctionMode(Enum):
-    CIEDE = 0
-    MICHELSON_CONTARST = 1
-    RGBDE = 2
+from pso_cost_function import PSOCostFunction
 
 
 class OptimizeMode(Enum):
@@ -38,7 +32,7 @@ class PSO:
         self,
         config: PSOConfig = PSOConfig(),
     ):
-        self.cost_mode = None
+        self.cost_function = None
         self.curr_ind = None
         self.wavelength = None
         self.config = config
@@ -59,12 +53,12 @@ class PSO:
     # sample shape (800)
     def run_pso(self, sample1: ndarray[Any, dtype[float]], sample2: ndarray[Any, dtype[float]],
                 wavelength: [Any, dtype[float]], led: ndarray[Any, dtype[float]],
-                cost_mode: CostFunctionMode.CIEDE, mode: OptimizeMode = OptimizeMode.MIN) \
+                cost_function: PSOCostFunction, mode: OptimizeMode = OptimizeMode.MIN) \
             -> Tuple[ndarray[Any, dtype[float]], float]:
         if sample1.shape != sample2.shape:
             raise ValueError("samples must have the same length.")
         self.mode = mode
-        self.cost_mode = cost_mode
+        self.cost_function = cost_function
         self.sample1 = sample1
         self.sample2 = sample2
         self.led = led
@@ -84,15 +78,12 @@ class PSO:
 
         self.positions = self.rand.uniform(self.low_bound, self.high_bound, size=(self.config.n_particles, n_led)).astype(np.float64)
         self.apply_constrains()
-        self.velocities = self.rand.uniform(0, 1.0, size=(self.config.n_particles, n_led)).astype(np.float64)
+        self.velocities = self.rand.uniform(self.low_bound, self.high_bound, size=(self.config.n_particles, n_led)).astype(np.float64)
         self.local_pos = self.positions.copy()
         self.local_cost = self.calculate_cost()
 
         self.global_pos = self.rand.uniform(self.low_bound, self.high_bound, size=n_led)
-        if self.mode == OptimizeMode.MAX:
-            self.global_cost = float("-inf")
-        else:  # mode == OptimizeMode.MIN
-            self.global_cost = float("inf")
+        self.global_cost = self.worst_cost_value()
 
 
     def step_pso(self):
@@ -100,36 +91,31 @@ class PSO:
         r2 = self.rand.uniform(self.low_bound, self.high_bound, size=self.config.n_particles)
 
         # Velocity & position update
+        t = self.global_pos - self.positions
         self.velocities = (self.config.c0 * self.velocities + (self.config.c1 * r1)[:, None] * (self.local_pos - self.positions) +
                            (self.config.c2 * r2)[:, None] * (self.global_pos - self.positions))
         self.positions = self.positions + self.velocities
-
         self.apply_constrains()
 
         # Evaluate
         curr_pos_cost = self.calculate_cost()
 
         # Update local bests
-        if self.mode == OptimizeMode.MIN:
-            local_pos_mask = curr_pos_cost < self.local_cost
-        else:
-            local_pos_mask = curr_pos_cost > self.local_cost
+        local_pos_mask = self.find_best_cost(curr_pos_cost, self.local_cost)
 
         self.local_pos[local_pos_mask] = self.positions[local_pos_mask]
         self.local_cost[local_pos_mask] = curr_pos_cost[local_pos_mask]
 
         local_best_idx = int(np.argmin(self.local_cost))
         local_best_cost = float(self.local_cost[local_best_idx])
-        if self.mode == OptimizeMode.MIN:
-            if local_best_cost < self.global_cost:
-                self.global_pos = self.positions[local_best_idx]
-                self.global_cost = local_best_cost
-        else:
-            if local_best_cost > self.global_cost:
-                self.global_pos = self.positions[local_best_idx]
-                self.global_cost = local_best_cost
+        curr_best_cost = self.find_best_cost(local_best_cost, self.global_cost)
+
+        if curr_best_cost != self.global_cost:
+            self.global_pos = self.positions[local_best_idx]
+            self.global_cost = local_best_cost
+
         # Debuging
-        print(f'Run {self.curr_ind + 1}/{self.config.n_iters}, cost {local_best_cost}')
+        print(f'Run {self.curr_ind + 1}/{self.config.n_iters}, cost {self.global_cost}')
         print(self.global_pos)
         self.curr_ind += 1
 
@@ -144,18 +130,24 @@ class PSO:
             raise ValueError("samples must have the same length.")
 
         simulated_illuminants = np.array([pos @ self.led for pos in self.positions])
-
-        if self.cost_mode == CostFunctionMode.CIEDE:
-            sample1_xyz = np.array([spim2XYZ(self.sample1, self.wavelength, sim_ill) for sim_ill in simulated_illuminants])
-            sample2_xyz = np.array([spim2XYZ(self.sample2, self.wavelength, sim_ill) for sim_ill in simulated_illuminants])
-            sample1_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample1_xyz])
-            sample2_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample2_xyz])
-            costs = np.array([
-                ciede(s1, s2) for s1, s2 in zip(sample1_lab, sample2_lab)
-            ])
+        costs = self.cost_function.calculate_cost(self.sample1, self.sample2, self.wavelength, simulated_illuminants)
 
         # Check for 0 vectors
         zero_mask = np.all(self.positions == 0, axis=1)
-        costs[zero_mask] = np.inf
+        costs[zero_mask] = self.worst_cost_value()
 
         return costs
+
+
+    def worst_cost_value(self) -> float:
+        if self.mode == OptimizeMode.MIN:
+            return float("inf")
+        else:
+            return float("-inf")
+
+
+    def find_best_cost(self, cost1, cost2) -> float:
+        if self.mode == OptimizeMode.MIN:
+            return cost1 < cost2
+        else:
+            return cost1 > cost2
