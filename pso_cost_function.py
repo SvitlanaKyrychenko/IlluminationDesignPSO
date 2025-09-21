@@ -2,7 +2,7 @@ import numpy as np
 from skimage import color
 
 from abc import ABC, abstractmethod
-from utils import spim2XYZ, spim2rgb, XYZ2Lab, XYZ2RGB
+from utils import spim2XYZ, spim2rgb, XYZ2Lab, XYZ2RGB, chromatic_adapt_XYZ
 from numpy import ndarray, dtype
 from typing import Any, Tuple
 from cost_functions import ciede, rgbde, michelson_contrast
@@ -30,8 +30,14 @@ class CiedePSO(PSOCostFunction):
 
             sample1_xyz = np.array([spim2XYZ(sample1, wavelength, sim_ill) for sim_ill in simulated_illuminants])
             sample2_xyz = np.array([spim2XYZ(sample2, wavelength, sim_ill) for sim_ill in simulated_illuminants])
-            sample1_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample1_xyz])
-            sample2_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample2_xyz])
+
+            sample1_xyz_adapted = np.array([chromatic_adapt_XYZ(x, wavelength, sim_ill)
+                                            for sim_ill, x in zip(simulated_illuminants, sample1_xyz)])
+            sample2_xyz_adapted = np.array([chromatic_adapt_XYZ(x, wavelength, sim_ill)
+                                            for sim_ill, x in zip(simulated_illuminants, sample2_xyz)])
+
+            sample1_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample1_xyz_adapted])
+            sample2_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample2_xyz_adapted])
             costs = np.array([
                 ciede(s1, s2) for s1, s2 in zip(sample1_lab, sample2_lab)
             ])

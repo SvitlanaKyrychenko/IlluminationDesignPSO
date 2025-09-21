@@ -240,6 +240,62 @@ def spim2XYZ(spectral_image, spim_wavelengths, lsource='D65'):
     return XYZ
 
 
+def spim2rgb_with_adaptation(spectral_image, spim_wavelengths, lsource='D65', clip_min=0, clip_max=1):
+    """
+    RGB = spim2rgb(spectral_image, spim_wavelengths, lsource='D65', clip_min=0, clip_max=1)
+
+    Calculate RGB image representation from a reflectance spectral image.
+
+    INPUTS:     spectral_image = Reflectance spectral image (3-D data cube)
+
+                spim_wavelengths = Wavelengths of the spectral bands of the
+                                   reflectance spectral image.
+
+                lsource = (optional) Light source to be used (default: 'D65').
+                           Can be a CIE standard illuminant ('A', 'D65', etc.),
+                                           *or*
+                           a custom light source emission spectrum
+                           (the wavelengths must be the same as for the
+                           reflectance spectral image).
+
+                clip_min = (optional) RGB-values below 0 are set to 'clip_min' value
+                                      (default: clip_min = 0).
+
+                clip_max = (optional) RGB-values above 1 are set to 'clip_max' value
+                                      (default: clip_max = 1).
+
+
+    OUTPUT:    RGB = RGB color image.
+    """
+
+    spectralImage = spectral_image.copy()
+    wavelengths = spim_wavelengths.copy()
+
+    XYZ = spim2XYZ(spectralImage, wavelengths, lsource)
+    XYZ_Adapted = chromatic_adapt_XYZ(XYZ, wavelengths, lsource)
+
+    RGB = XYZ2RGB(XYZ_Adapted, clip_min, clip_max)
+
+    return RGB
+
+
+def chromatic_adapt_XYZ(XYZ, wavelengths, illuminant):
+    _M_BRADFORD   = np.array([[ 0.8951,  0.2664, -0.1614],
+                          [-0.7502,  1.7135,  0.0367],
+                          [ 0.0389, -0.0685,  1.0296]])
+    _M_BRADFORD_I = np.linalg.inv(_M_BRADFORD)
+
+    white = np.ones((1,1,len(wavelengths)))
+    src_white = spim2XYZ(white, wavelengths, illuminant).squeeze()
+    dst_white = np.array([95.047, 100.0, 108.883])
+
+    Ls = _M_BRADFORD @ (src_white / src_white[1])
+    Ld = _M_BRADFORD @ (dst_white / dst_white[1])
+    M  = _M_BRADFORD_I @ np.diag(Ld / Ls) @ _M_BRADFORD
+    shp = XYZ.shape
+    XYZ_adapted = (XYZ.reshape(-1,3) @ M.T).reshape(shp)
+    return XYZ_adapted
+
 def XYZ2Lab(XYZ, cie_illuminant='D65'):
     """
     Lab = XYZ2Lab(XYZ, cie_illuminant='D65')

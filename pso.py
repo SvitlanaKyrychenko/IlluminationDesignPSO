@@ -83,6 +83,9 @@ class PSO:
         self.local_cost = self.calculate_cost()
 
         self.global_pos = self.rand.uniform(self.low_bound, self.high_bound, size=n_led)
+        self.global_pos = np.clip(self.global_pos, 0.0, None)
+        self.global_pos = self.global_pos /sum(self.global_pos)
+
         self.global_cost = self.worst_cost_value()
 
 
@@ -103,14 +106,14 @@ class PSO:
         # Update local bests
         local_pos_mask = self.find_best_cost(curr_pos_cost, self.local_cost)
 
-        self.local_pos[local_pos_mask] = self.positions[local_pos_mask]
-        self.local_cost[local_pos_mask] = curr_pos_cost[local_pos_mask]
+        self.local_pos[local_pos_mask] = self.positions[local_pos_mask].copy()
+        self.local_cost[local_pos_mask] = curr_pos_cost[local_pos_mask].copy()
 
         local_best_idx = int(np.argmin(self.local_cost))
         local_best_cost = float(self.local_cost[local_best_idx])
-        curr_best_cost = self.find_best_cost(local_best_cost, self.global_cost)
+        curr_is_best_cost = self.find_best_cost(local_best_cost, self.global_cost)
 
-        if curr_best_cost != self.global_cost:
+        if curr_is_best_cost:
             self.global_pos = self.positions[local_best_idx]
             self.global_cost = local_best_cost
 
@@ -129,7 +132,7 @@ class PSO:
         if self.sample1.shape != self.sample2.shape:
             raise ValueError("samples must have the same length.")
 
-        simulated_illuminants = np.array([pos @ self.led for pos in self.positions])
+        simulated_illuminants = self.positions @ self.led
         costs = self.cost_function.calculate_cost(self.sample1, self.sample2, self.wavelength, simulated_illuminants)
 
         # Check for 0 vectors
@@ -146,8 +149,9 @@ class PSO:
             return float("-inf")
 
 
-    def find_best_cost(self, cost1, cost2) -> float:
+    def find_best_cost(self, cost1, cost2) -> bool:
         if self.mode == OptimizeMode.MIN:
             return cost1 < cost2
         else:
             return cost1 > cost2
+

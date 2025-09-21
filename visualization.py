@@ -1,4 +1,6 @@
-from utils import spim2rgb
+import numpy as np
+
+from utils import spim2rgb, spim2rgb_with_adaptation
 from cost_functions import rgbde
 
 def get_reflectances_from_coordinates(dataCube, coordinates):
@@ -19,10 +21,10 @@ def get_reflectances_from_coordinates(dataCube, coordinates):
 def show_rgb_custom_illuminant(reflectance, wavelengths, customIlluminant):
     import matplotlib.pyplot as plt
     
-    rgbD65Image = spim2rgb(reflectance, wavelengths)
+    rgbD65Image = spim2rgb(reflectance, wavelengths, 'D65', np.nan, np.nan)
     # rgbD65Diff = rgbde(rgbD65Image[spots[0][0],:], rgbD65Image[spots[1]])
     
-    rgbCustomImage = spim2rgb(reflectance, wavelengths, customIlluminant)
+    rgbCustomImage = spim2rgb_with_adaptation(reflectance, wavelengths, customIlluminant, np.nan, np.nan)
     # rgbCustomDiff = rgbde(rgbCustomImage, patches[0], patches[1])
     
     _, axes = plt.subplots(1, 2)

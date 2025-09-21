@@ -1,3 +1,5 @@
+import numpy as np
+
 
 def read_envi(headerFileName, rawFileExt='.raw'):
     """
@@ -96,21 +98,34 @@ def resize_cube(data_cube, new_y_size):
     return newCube
 
 
-def get_spectral_reflectance_from_files(sample_filename, white_ref_filename, dark_noise_filename,  rawFileExt='.raw'):
-      
+def get_spectral_reflectance_from_files(sample_filename, white_ref_filename, dark_noise_filename, min_wavelength=400, max_wavelength=700, rawFileExt='.raw'):
     sample_cube, sample_wavelengths = read_envi(sample_filename, rawFileExt)
     white_cube, _ = read_envi(white_ref_filename, rawFileExt)
     dark_cube, _ = read_envi(dark_noise_filename, rawFileExt)
-    
+
+    # Crop wavelength and area of interest
+    sample_cube, ref_wavelengths = limit_wavelenghts(sample_cube, sample_wavelengths, min_wavelength, max_wavelength)
+    white_cube, _ = limit_wavelenghts(white_cube, sample_wavelengths, min_wavelength, max_wavelength)
+    dark_cube, _ = limit_wavelenghts(dark_cube, sample_wavelengths, min_wavelength, max_wavelength)
+
+    sample_cube = crop_area_of_interest(sample_cube, 810, 1360, 20, 565)
+    white_cube = crop_area_of_interest(white_cube, 810, 1360, 20, 565)
+    dark_cube = crop_area_of_interest(dark_cube, 810, 1360, 20, 565)
+
     # Resize White and Dark cubes to fit the Sample
     ySize, _, _ = sample_cube.shape
-    white_cube = resize_cube(white_cube, ySize)
-    dark_cube = resize_cube(dark_cube, ySize)
+    white_cube = np.mean(white_cube, axis=0)
+    white_cube = np.tile(white_cube, (ySize, 1, 1))
+    dark_cube = np.mean(dark_cube, axis=0)
+    dark_cube = np.tile(dark_cube, (ySize, 1, 1))
+
+    #white_cube = resize_cube(white_cube, ySize)
+    #dark_cube = resize_cube(dark_cube, ySize)
     
     # Calculate pectral reflectance image R
     spectral_reflectance_cube = ((sample_cube - dark_cube) / (white_cube - dark_cube))
     
-    return spectral_reflectance_cube, sample_wavelengths
+    return spectral_reflectance_cube, ref_wavelengths
 
 
 def limit_wavelenghts(spectral_data, original_wavelengths, min_limit = 400, max_limit = 700):
@@ -128,8 +143,7 @@ def crop_area_of_interest(spectral_data, min_x, max_x, min_y, max_y):
 
 
 def read_interp_leds_spectra(folder, reflectance_wavelengths):
-    import numpy as np
-    
+
     data0 = np.loadtxt(folder + "led1.txt")
     n_wavelengths = data0.shape[0]
 
@@ -143,7 +157,7 @@ def read_interp_leds_spectra(folder, reflectance_wavelengths):
         filename = "led" + str(i+1) + ".txt"
         data = np.loadtxt(folder + filename)
         leds_spectra[i] = data[:, 1]
-    
+
     leds_spectra_interp = np.array([
         np.interp(reflectance_wavelengths, leds_wavelengths, led)
         for led in leds_spectra
@@ -191,26 +205,19 @@ def plot_spds(spds, wavelengths):
     plt.show()
 
 
-def get_main_data(sample_folder, sample_name, leds_folder):
+def get_main_data(sample_folder, sample_name, leds_folder, min_wavelength=400, max_wavelength=700):
     sample_filename = sample_folder + sample_name
     white_ref_filename = sample_folder + "WHITEREF_" + sample_name
     dark_noise_filename = sample_folder + "DARKREF_" + sample_name
     
-    reflectance, ref_wavelengths = get_spectral_reflectance_from_files(sample_filename, white_ref_filename, dark_noise_filename)
-    reflectance, ref_wavelengths = limit_wavelenghts(reflectance, ref_wavelengths)
-    
-    # show_spectral_band_image(reflectance, [40])
-    reflectance = crop_area_of_interest(reflectance, 810, 1360, 20, 565)
-    # show_spectral_band_image(reflectance, [40])
-   
-    
+    reflectance, ref_wavelengths = get_spectral_reflectance_from_files(sample_filename, white_ref_filename, dark_noise_filename, min_wavelength, max_wavelength)
+
     leds_spectra = read_interp_leds_spectra(leds_folder, ref_wavelengths)
     
     return reflectance, ref_wavelengths, leds_spectra
     
     
 def get_spots_reflectance(spots, all_reflectance):
-    import numpy as np
     
     spots_reflectance = np.array([all_reflectance[spots[0][0], spots[0][1], :], 
                                   all_reflectance[spots[1][0], spots[1][1], :]]
