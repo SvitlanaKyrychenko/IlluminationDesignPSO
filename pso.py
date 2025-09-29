@@ -133,7 +133,7 @@ class PSO:
             raise ValueError("samples must have the same length.")
 
         simulated_illuminants = self.positions @ self.led
-        costs = self.cost_function.calculate_cost(self.sample1, self.sample2, self.wavelength, simulated_illuminants)
+        costs = self.cost_function.calculate_cost(self.sample1, self.sample2, self.wavelength, simulated_illuminants, self.worst_cost_value())
 
         # Check for 0 vectors
         zero_mask = np.all(self.positions == 0, axis=1)

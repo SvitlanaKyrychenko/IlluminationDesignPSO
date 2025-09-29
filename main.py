@@ -30,6 +30,10 @@ if __name__ == '__main__':
     reflectance, ref_wavelengths, leds_spectra = get_main_data(sample_folder, sample_name, leds_folder)
     spot_number = [290, 185]
     spot_background = [250, 180]
+
+    #spot_number = [290, 185] # Orange
+    #spot_background = [275, 355] # Red
+
     spots = [spot_number, spot_background]
     spots_reflectance = get_spots_reflectance(spots, reflectance)
 
@@ -44,18 +48,18 @@ if __name__ == '__main__':
     pso = PSO(pso_config)
 
     # Chose PSO cost function
-    pso_cost = CiedePSO()
+    #pso_cost = CiedePSO()
     #pso_cost = RgbdePSO()
-    #pso_cost = MichelsonContrastPSO()
+    pso_cost = MichelsonContrastPSO()
 
     # Run PSO
     global_pos, global_cost = pso.run_pso(spots_reflectance[0], spots_reflectance[1], ref_wavelengths,
-                                          leds_spectra, pso_cost, OptimizeMode.MIN)
+                                          leds_spectra, pso_cost, OptimizeMode.MAX)
     print("Final PSO cost")
     print(global_pos)
     print(global_cost)
 
     # Visualize result
     custom_illuminant = global_pos @ leds_spectra
-    plot_spds([spots_reflectance[0], spots_reflectance[1], custom_illuminant], ref_wavelengths, ["Spot 1", "Spot 2", "L optim"])
+    plot_spds([spots_reflectance[0], spots_reflectance[1], custom_illuminant/np.max(custom_illuminant)], ref_wavelengths, ["Spot 1", "Spot 2", "L optim"])
     show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant)

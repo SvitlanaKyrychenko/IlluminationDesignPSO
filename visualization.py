@@ -22,9 +22,7 @@ def show_rgb_custom_illuminant(reflectance, wavelengths, customIlluminant):
     import matplotlib.pyplot as plt
     
     rgbD65Image = spim2rgb(reflectance, wavelengths, 'D65', np.nan, np.nan)
-    # rgbD65Diff = rgbde(rgbD65Image[spots[0][0],:], rgbD65Image[spots[1]])
-    
-    rgbCustomImage = spim2rgb_with_adaptation(reflectance, wavelengths, customIlluminant, np.nan, np.nan)
+    rgbCustomImage = spim2rgb(reflectance, wavelengths, customIlluminant)
     # rgbCustomDiff = rgbde(rgbCustomImage, patches[0], patches[1])
     
     _, axes = plt.subplots(1, 2)
