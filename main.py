@@ -1,8 +1,12 @@
+import os.path
+
 import numpy as np
 from pso import PSOConfig, PSO, OptimizeMode
 from pso_cost_function import CiedePSO, RgbdePSO, MichelsonContrastPSO, PSOCostFunction
+from cost_functions import ciede, rgbde, michelson_contrast
 from data_preparation import get_main_data, get_spots_reflectance
 from visualization import show_rgb_custom_illuminant, plot_spds
+from generate_emission_spectrum_file import save_emission_spectrum
 
 
 # Test on random data
@@ -48,18 +52,34 @@ if __name__ == '__main__':
     pso = PSO(pso_config)
 
     # Chose PSO cost function
-    #pso_cost = CiedePSO()
+    pso_cost = CiedePSO()
     #pso_cost = RgbdePSO()
-    pso_cost = MichelsonContrastPSO()
+    #pso_cost = MichelsonContrastPSO()
 
     # Run PSO
     global_pos, global_cost = pso.run_pso(spots_reflectance[0], spots_reflectance[1], ref_wavelengths,
-                                          leds_spectra, pso_cost, OptimizeMode.MAX)
+                                          leds_spectra, pso_cost, OptimizeMode.MIN)
     print("Final PSO cost")
     print(global_pos)
     print(global_cost)
 
     # Visualize result
     custom_illuminant = global_pos @ leds_spectra
-    plot_spds([spots_reflectance[0], spots_reflectance[1], custom_illuminant/np.max(custom_illuminant)], ref_wavelengths, ["Spot 1", "Spot 2", "L optim"])
-    show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant)
+    # plot_spds([spots_reflectance[0], spots_reflectance[1], custom_illuminant/np.max(custom_illuminant)], ref_wavelengths, ["Spot 1", "Spot 2", "L optim"])
+    # show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant)
+
+    custom_illuminant_normalized = custom_illuminant / np.max(custom_illuminant)
+
+    # Visualize results
+    spds = [spots_reflectance[0], spots_reflectance[1], custom_illuminant_normalized]
+    labels = ["Spot 1", "Spot 2", "L optim"]
+    plot_spds(spds, ref_wavelengths, labels)
+
+    cost_function = ciede
+    # cost_function = rgbde()
+    # cost_function = michelson_contrast()
+    show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant_normalized, spots, cost_function, global_cost)
+
+    results_folder = "emission_spectrums"
+    filename = "test_01.txt"
+    save_emission_spectrum(results_folder, filename, ref_wavelengths, custom_illuminant_normalized)
