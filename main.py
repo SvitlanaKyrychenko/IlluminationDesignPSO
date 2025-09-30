@@ -31,13 +31,17 @@ if __name__ == '__main__':
     reflectance, ref_wavelengths, leds_spectra = get_main_data(sample_folder, sample_name, leds_folder)
     spot_number = [290, 185] # y, x
     spot_background = [250, 180]
+
+    #spot_number = [290, 185] # Orange
+    #spot_background = [275, 355] # Red
+
     spots = [spot_number, spot_background]
     spots_reflectance = get_spots_reflectance(spots, reflectance)
 
 
     # Set PSO parameters
     n_particles = 30
-    n_iterations = 100
+    n_iterations = 500
     c0 = 0.95
     c1 = 5
     c2 = 5
