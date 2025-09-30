@@ -6,8 +6,6 @@
 # (c) Pauli Fält
 #
 
-from enum import Enum
-from typing import Callable, Tuple
 import numpy as np
 from numpy import array, interp, dot, reshape, arange, ones, stack
 
@@ -240,6 +238,23 @@ def spim2XYZ(spectral_image, spim_wavelengths, lsource='D65'):
     return XYZ
 
 
+def spim2Lab(dataCube, wavelengths, cie_illuminant='D65'):
+    xyz = spim2XYZ(dataCube, wavelengths, cie_illuminant)
+    lab = XYZ2Lab(xyz, wavelengths, cie_illuminant)
+    return lab
+
+
+def spim2gray(dataCube, wavelengths, cie_illuminant='D65', clip_min=0, clip_max=1):
+    rgbImage = spim2rgb(dataCube, wavelengths, cie_illuminant, clip_min, clip_max)
+    r = rgbImage[:, :, 0]
+    g = rgbImage[:, :, 1]
+    b = rgbImage[:, :, 2]
+    
+    grayImage = 0.2125 * r + 0.7154 * g + 0.0721 * b
+    
+    return grayImage
+
+
 def spim2rgb_with_adaptation(spectral_image, spim_wavelengths, lsource='D65', clip_min=0, clip_max=1):
     """
     RGB = spim2rgb(spectral_image, spim_wavelengths, lsource='D65', clip_min=0, clip_max=1)
@@ -296,7 +311,8 @@ def chromatic_adapt_XYZ(XYZ, wavelengths, illuminant):
     XYZ_adapted = (XYZ.reshape(-1,3) @ M.T).reshape(shp)
     return XYZ_adapted
 
-def XYZ2Lab(XYZ, cie_illuminant='D65'):
+
+def XYZ2Lab(XYZ, spim_wavelengths, cie_illuminant='D65'):
     """
     Lab = XYZ2Lab(XYZ, cie_illuminant='D65')
 
@@ -318,7 +334,10 @@ def XYZ2Lab(XYZ, cie_illuminant='D65'):
     # CIE XYZ tristimulus values for a perfectly reflecting diffuse sample,
     # using a white light source (CIE standard illuminant), and the CIE 1931
     # standard observer:
-    wavelengths = arange(380,781,1)
+    # wavelengths = arange(380,781,1)
+    
+    wavelengths = spim_wavelengths.copy()
+    
     refl_perfect = ones((1,1,len(wavelengths)))
     XYZ_n = spim2XYZ(refl_perfect, wavelengths, cie_illuminant)
     XYZ_n = XYZ_n.squeeze()

@@ -57,6 +57,7 @@ class PSO:
             -> Tuple[ndarray[Any, dtype[float]], float]:
         if sample1.shape != sample2.shape:
             raise ValueError("samples must have the same length.")
+        
         self.mode = mode
         self.cost_function = cost_function
         self.sample1 = sample1
@@ -118,13 +119,15 @@ class PSO:
             self.global_cost = local_best_cost
 
         # Debuging
-        print(f'Run {self.curr_ind + 1}/{self.config.n_iters}, cost {self.global_cost}')
-        print(self.global_pos)
-        self.curr_ind += 1
+        # print(f'Run {self.curr_ind + 1}/{self.config.n_iters}, cost {self.global_cost}')
+        # print(self.global_pos)
+        # self.curr_ind += 1
 
 
     def apply_constrains(self):
+        # Intensities of the LEDs cannot be negative
         self.positions = np.clip(self.positions, 0.0, None)
+        # Sum of the convex combination weights must be one
         self.positions = np.array([x /sum(x) for x in self.positions])
 
 

@@ -36,8 +36,8 @@ class CiedePSO(PSOCostFunction):
             sample2_xyz_adapted = np.array([chromatic_adapt_XYZ(x, wavelength, sim_ill)
                                             for sim_ill, x in zip(simulated_illuminants, sample2_xyz)])
 
-            sample1_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample1_xyz_adapted])
-            sample2_lab = np.array([np.squeeze(XYZ2Lab(x))for x in sample2_xyz_adapted])
+            sample1_lab = np.array([np.squeeze(XYZ2Lab(x, wavelength))for x in sample1_xyz_adapted])
+            sample2_lab = np.array([np.squeeze(XYZ2Lab(x, wavelength))for x in sample2_xyz_adapted])
             costs = np.array([
                 ciede(s1, s2) for s1, s2 in zip(sample1_lab, sample2_lab)
             ])

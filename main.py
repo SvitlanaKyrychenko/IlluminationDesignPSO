@@ -1,9 +1,10 @@
 import numpy as np
 from pso import PSOConfig, PSO, OptimizeMode
 from pso_cost_function import CiedePSO, RgbdePSO, MichelsonContrastPSO, PSOCostFunction
+from cost_functions import ciede, rgbde, michelson_contrast
 from data_preparation import get_main_data, get_spots_reflectance
 from visualization import show_rgb_custom_illuminant, plot_spds
-
+from generate_emission_spectrum_file import save_emission_spectrum
 
 # Test on random data
 def run_random_pso(pso: PSO, pso_cost: PSOCostFunction):
@@ -28,7 +29,7 @@ if __name__ == '__main__':
 
     # Prepera data
     reflectance, ref_wavelengths, leds_spectra = get_main_data(sample_folder, sample_name, leds_folder)
-    spot_number = [290, 185]
+    spot_number = [290, 185] # y, x
     spot_background = [250, 180]
     spots = [spot_number, spot_background]
     spots_reflectance = get_spots_reflectance(spots, reflectance)
@@ -36,7 +37,7 @@ if __name__ == '__main__':
 
     # Set PSO parameters
     n_particles = 30
-    n_iterations = 500
+    n_iterations = 100
     c0 = 0.95
     c1 = 5
     c2 = 5
@@ -55,7 +56,20 @@ if __name__ == '__main__':
     print(global_pos)
     print(global_cost)
 
-    # Visualize result
+    # Generate custom illuminant
     custom_illuminant = global_pos @ leds_spectra
-    plot_spds([spots_reflectance[0], spots_reflectance[1], custom_illuminant], ref_wavelengths, ["Spot 1", "Spot 2", "L optim"])
-    show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant)
+    custom_illuminant_normalized = custom_illuminant / np.max(custom_illuminant)
+    
+    # Visualize results
+    spds = [spots_reflectance[0], spots_reflectance[1], custom_illuminant_normalized]
+    labels = ["Spot 1", "Spot 2", "L optim"]
+    plot_spds(spds, ref_wavelengths, labels)
+    
+    cost_function = ciede
+    # cost_function = rgbde()
+    # cost_function = michelson_contrast()
+    show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant_normalized, spots, cost_function, global_cost)
+    
+    results_folder = "./IlluminationDesignPSO/emission_spectrums"
+    filename = "test_01.txt"
+    save_emission_spectrum(results_folder, filename, ref_wavelengths, custom_illuminant_normalized)
