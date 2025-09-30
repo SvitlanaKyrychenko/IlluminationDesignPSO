@@ -24,8 +24,8 @@ def get_cost_between_spots(cube, spot1, spot2, cost_function):
 
 
 def show_rgb_custom_illuminant(reflectance, wavelengths, customIlluminant, spots, cost_function, global_cost):
-    rgb_image_D65 = spim2rgb(reflectance, wavelengths, 'D65', np.nan, np.nan)
-    rgb_image_custom = spim2rgb(reflectance, wavelengths, customIlluminant, np.nan, np.nan)
+    rgb_image_D65 = spim2rgb(reflectance, wavelengths, 'D65')
+    rgb_image_custom = spim2rgb(reflectance, wavelengths, customIlluminant)
 
     if cost_function == rgbde:
         title = "RGB Difference: "

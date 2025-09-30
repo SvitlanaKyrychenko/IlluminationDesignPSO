@@ -404,8 +404,8 @@ def XYZ2RGB(XYZ, clip_min=0, clip_max=1):
     RGB = dot(M, XYZ)
 
     RGB = RGB/100
-    # print(f'Num cliped over 1 {np.sum(RGB > 1)}')
-    # print(f'Num cliped under 1 {np.sum(RGB < 1)}')
+    # print(f'num clipped max = {np.sum(RGB > 1)}')
+    # print(f'num clipped min = {np.sum(RGB < 1)}')
     RGB[RGB > 1] = clip_max # default: clip_max=1
     RGB[RGB < 0] = clip_min # default: clip_min=0
 

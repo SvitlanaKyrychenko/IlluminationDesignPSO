@@ -63,6 +63,7 @@ class RgbdePSO(PSOCostFunction):
 
             rgb_invalid_mask_sample1 = np.array([np.any(np.isnan(x)) for x in sample1_rgb])
             rgb_invalid_mask_sample2 = np.array([np.any(np.isnan(x)) for x in sample2_rgb])
+
             costs = np.zeros(num_samples)
             for i in range(num_samples):
                 if rgb_invalid_mask_sample1[i] or rgb_invalid_mask_sample2[i]:
