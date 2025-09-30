@@ -119,9 +119,9 @@ class PSO:
             self.global_cost = local_best_cost
 
         # Debuging
-        # print(f'Run {self.curr_ind + 1}/{self.config.n_iters}, cost {self.global_cost}')
-        # print(self.global_pos)
-        # self.curr_ind += 1
+        print(f'Run {self.curr_ind + 1}/{self.config.n_iters}, cost {self.global_cost}')
+        print(self.global_pos)
+        self.curr_ind += 1
 
 
     def apply_constrains(self):
