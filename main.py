@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
 
     # Set PSO parameters
-    n_particles = 30
+    n_particles = 100
     n_iterations = 500
     c0 = 0.95
     c1 = 5
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     pso = PSO(pso_config)
 
     # Chose PSO cost function
-    pso_cost = CiedePSO()
-    #pso_cost = RgbdePSO()
+    #pso_cost = CiedePSO()
+    pso_cost = RgbdePSO()
     #pso_cost = MichelsonContrastPSO()
 
     # Run PSO
@@ -75,9 +75,9 @@ if __name__ == '__main__':
     labels = ["Spot 1", "Spot 2", "L optim"]
     plot_spds(spds, ref_wavelengths, labels)
 
-    cost_function = ciede
-    # cost_function = rgbde()
-    # cost_function = michelson_contrast()
+    #cost_function = ciede
+    cost_function = rgbde
+    # cost_function = michelson_contrast
     show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant_normalized, spots, cost_function, global_cost)
 
     results_folder = "emission_spectrums"

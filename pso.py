@@ -26,7 +26,7 @@ class PSOConfig:
 class PSO:
 
     low_bound = float(0.0)
-    high_bound = float(1.0)
+    high_bound = float(2.0)
 
     def __init__(
         self,

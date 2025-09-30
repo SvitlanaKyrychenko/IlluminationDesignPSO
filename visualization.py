@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from utils import spim2rgb, spim2Lab, spim2gray, spim2rgb_with_adaptation
+from utils import spim2rgb, spim2Lab, spim2gray
 from cost_functions import ciede, rgbde
 
 def get_reflectances_from_coordinates(dataCube, coordinates):
@@ -25,7 +25,7 @@ def get_cost_between_spots(cube, spot1, spot2, cost_function):
 
 def show_rgb_custom_illuminant(reflectance, wavelengths, customIlluminant, spots, cost_function, global_cost):
     rgb_image_D65 = spim2rgb(reflectance, wavelengths, 'D65', np.nan, np.nan)
-    rgb_image_custom = spim2rgb_with_adaptation(reflectance, wavelengths, customIlluminant, np.nan, np.nan)
+    rgb_image_custom = spim2rgb(reflectance, wavelengths, customIlluminant, np.nan, np.nan)
 
     if cost_function == rgbde:
         title = "RGB Difference: "

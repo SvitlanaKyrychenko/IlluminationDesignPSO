@@ -2,7 +2,7 @@ import numpy as np
 from skimage import color
 
 from abc import ABC, abstractmethod
-from utils import spim2XYZ, spim2rgb, XYZ2RGB
+from utils import spim2XYZ, spim2rgb, XYZ2RGB, XYZ2Lab
 from numpy import ndarray, dtype
 from typing import Any
 from cost_functions import ciede, rgbde, michelson_contrast
@@ -42,8 +42,8 @@ class CiedePSO(PSOCostFunction):
                 if rgb_invalid_mask_sample1[i] or rgb_invalid_mask_sample2[i]:
                     costs[i] = worst_value
                 else:
-                    sample1_lab = np.squeeze(sample1_xyz[i])
-                    sample2_lab = np.squeeze(sample2_xyz[i])
+                    sample1_lab = np.squeeze(XYZ2Lab(sample1_xyz[i]))
+                    sample2_lab = np.squeeze(XYZ2Lab(sample2_xyz[i]))
                     costs[i] = ciede(sample1_lab, sample2_lab)
 
             return costs
