@@ -5,7 +5,7 @@ from pso import PSOConfig, PSO, OptimizeMode
 from pso_cost_function import CiedePSO, RgbdePSO, MichelsonContrastPSO, PSOCostFunction
 from cost_functions import ciede, rgbde, michelson_contrast
 from data_preparation import get_main_data, get_spots_reflectance
-from visualization import show_rgb_custom_illuminant, plot_spds
+from visualization import show_rgb_custom_illuminant, plot_spds, show_rgb_custom_illuminant_gray
 from generate_emission_spectrum_file import save_emission_spectrum
 
 
@@ -33,18 +33,20 @@ if __name__ == '__main__':
     # Prepera data
     reflectance, ref_wavelengths, leds_spectra = get_main_data(sample_folder, sample_name, leds_folder)
     spot_number = [290, 185]
-    spot_background = [250, 180]
+    spot_background = [255, 182]
 
     #spot_number = [290, 185] # Orange
     #spot_background = [275, 355] # Red
 
     spots = [spot_number, spot_background]
-    spots_reflectance = get_spots_reflectance(spots, reflectance)
+    spots_reflectance = get_spots_reflectance(reflectance, spots)
+    # spot_size = 14
+    # spots_reflectance = get_spots_reflectance_mean(reflectance, spots, spot_size)
 
 
     # Set PSO parameters
-    n_particles = 30
-    n_iterations = 500
+    n_particles = 500
+    n_iterations = 100
     c0 = 0.95
     c1 = 5
     c2 = 5
@@ -52,9 +54,9 @@ if __name__ == '__main__':
     pso = PSO(pso_config)
 
     # Chose PSO cost function
-    pso_cost = CiedePSO()
+    #pso_cost = CiedePSO()
     #pso_cost = RgbdePSO()
-    #pso_cost = MichelsonContrastPSO()
+    pso_cost = MichelsonContrastPSO()
 
     # Run PSO
     global_pos, global_cost = pso.run_pso(spots_reflectance[0], spots_reflectance[1], ref_wavelengths,
@@ -65,21 +67,19 @@ if __name__ == '__main__':
 
     # Visualize result
     custom_illuminant = global_pos @ leds_spectra
-    # plot_spds([spots_reflectance[0], spots_reflectance[1], custom_illuminant/np.max(custom_illuminant)], ref_wavelengths, ["Spot 1", "Spot 2", "L optim"])
-    # show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant)
-
     custom_illuminant_normalized = custom_illuminant / np.max(custom_illuminant)
 
     # Visualize results
     spds = [spots_reflectance[0], spots_reflectance[1], custom_illuminant_normalized]
-    labels = ["Spot 1", "Spot 2", "L optim"]
+    labels = ["Number Spot", "Background Spot", "Custom Illuminant"]
     plot_spds(spds, ref_wavelengths, labels)
 
-    cost_function = ciede
-    #cost_function = rgbde
-    #cost_function = michelson_contrast
+    # cost_function = ciede
+    # cost_function = rgbde
+    cost_function = michelson_contrast
     show_rgb_custom_illuminant(reflectance, ref_wavelengths, custom_illuminant, spots, cost_function, global_cost)
+    show_rgb_custom_illuminant_gray(reflectance, ref_wavelengths, custom_illuminant, spots, cost_function, global_cost)
 
-    results_folder = "emission_spectrums"
-    filename = "test_01.txt"
+    results_folder = "./IlluminationDesignPSO/emission_spectrums"
+    filename = "contrast_min.txt"
     save_emission_spectrum(results_folder, filename, ref_wavelengths, custom_illuminant)

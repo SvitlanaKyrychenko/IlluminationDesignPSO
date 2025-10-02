@@ -216,12 +216,21 @@ def get_main_data(sample_folder, sample_name, leds_folder, min_wavelength=400, m
     
     return reflectance, ref_wavelengths, leds_spectra
     
-    
-def get_spots_reflectance(spots, all_reflectance):
-    
+def get_spots_reflectance(all_reflectance, spots):
     spots_reflectance = np.array([all_reflectance[spots[0][0], spots[0][1], :], 
                                   all_reflectance[spots[1][0], spots[1][1], :]]
                                  )
+    return np.array(spots_reflectance) 
+
+  
+def get_spots_reflectance_mean(all_reflectance, centers, size):
+    spots_reflectance = []
+    radius = int(size / 2)
     
-    return spots_reflectance
-    
+    for center in centers:
+        xStart, yStart = center
+        spot = all_reflectance[yStart - radius: yStart + radius, xStart - radius:xStart + radius, :]
+        spotMean = np.mean(spot, axis=(0,1))
+        spots_reflectance.append(spotMean)
+        
+    return np.array(spots_reflectance) 

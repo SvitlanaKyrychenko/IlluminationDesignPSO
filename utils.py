@@ -240,7 +240,7 @@ def spim2XYZ(spectral_image, spim_wavelengths, lsource='D65'):
 
 def spim2Lab(dataCube, wavelengths, cie_illuminant='D65'):
     xyz = spim2XYZ(dataCube, wavelengths, cie_illuminant)
-    lab = XYZ2Lab(xyz)
+    lab = XYZ2Lab(xyz, wavelengths, cie_illuminant=cie_illuminant)
     return lab
 
 
@@ -312,7 +312,7 @@ def chromatic_adapt_XYZ(XYZ, wavelengths, illuminant):
     return XYZ_adapted
 
 
-def XYZ2Lab(XYZ, cie_illuminant='D65'):
+def XYZ2Lab(XYZ, wavelengths, cie_illuminant='D65'):
     """
     Lab = XYZ2Lab(XYZ, cie_illuminant='D65')
 
@@ -334,7 +334,7 @@ def XYZ2Lab(XYZ, cie_illuminant='D65'):
     # CIE XYZ tristimulus values for a perfectly reflecting diffuse sample,
     # using a white light source (CIE standard illuminant), and the CIE 1931
     # standard observer:
-    wavelengths = arange(380,781,1)
+    #wavelengths = arange(380,781,1)
     refl_perfect = ones((1,1,len(wavelengths)))
     XYZ_n = spim2XYZ(refl_perfect, wavelengths, cie_illuminant)
     XYZ_n = XYZ_n.squeeze()

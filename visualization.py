@@ -44,24 +44,25 @@ def show_rgb_custom_illuminant(reflectance, wavelengths, customIlluminant, spots
     diff_D65 = get_cost_between_spots(values_d65, spots[0], spots[1], cost_function)
     diff_custom = get_cost_between_spots(values_custom, spots[0], spots[1], cost_function)
 
+    spot_size = 20
     _, axes = plt.subplots(2, 2)
     axes = axes.flatten()
     axes[0].imshow(rgb_image_D65)
-    axes[0].scatter([spots[0][1]], [spots[0][0]], s=40, facecolors='none',  edgecolors='white', linewidths=1.5)
-    axes[0].scatter([spots[1][1]],  [spots[1][0]],  s=40, facecolors='none', edgecolors='black', linewidths=1.5)
+    axes[0].scatter([spots[0][1]], [spots[0][0]], s=spot_size, facecolors='none',  edgecolors='white', linewidths=1.5)
+    axes[0].scatter([spots[1][1]],  [spots[1][0]],  s=spot_size, facecolors='none', edgecolors='black', linewidths=1.5)
     axes[0].set_title("RBG Image D65")
     axes[0].axis("off")
 
     axes[1].imshow(rgb_image_custom)
-    axes[1].scatter([spots[0][1]], [spots[0][0]], s=40, facecolors='none',  edgecolors='white', linewidths=1.5)
-    axes[1].scatter([spots[1][1]],  [spots[1][0]],  s=40, facecolors='none', edgecolors='black', linewidths=1.5)
+    axes[1].scatter([spots[0][1]], [spots[0][0]], s=spot_size, facecolors='none',  edgecolors='white', linewidths=1.5)
+    axes[1].scatter([spots[1][1]],  [spots[1][0]],  s=spot_size, facecolors='none', edgecolors='black', linewidths=1.5)
     axes[1].set_title("RBG Custom Illuminant")
     axes[1].axis("off")
 
 
     # Rectangle parameters
     rect_x, rect_y = 10, 10   # position in plot coords
-    rect_w, rect_h = 40, 20   # width and height
+    rect_w, rect_h = 50, 70   # width and height
 
     color_1_D65 = rgb_image_D65[spots[1][0], spots[1][1], :]
     color_2_D65 = rgb_image_D65[spots[0][0], spots[0][1], :]
@@ -74,7 +75,7 @@ def show_rgb_custom_illuminant(reflectance, wavelengths, customIlluminant, spots
     axes[2].add_patch(rect_2_D65)
     axes[2].set_xlim(0, rect_x + rect_w + 10)
     axes[2].set_ylim(0, rect_y + rect_h + 10)
-    axes[2].set_title(f"{title}{diff_D65:.2f}\nBackground Patch - Number Patch")
+    axes[2].set_title(f"{title}{diff_D65:.2f}\nBackground Spot - Number Spot")
     axes[2].axis("off")
 
 
@@ -89,11 +90,75 @@ def show_rgb_custom_illuminant(reflectance, wavelengths, customIlluminant, spots
     axes[3].add_patch(rect_2_custom)
     axes[3].set_xlim(0, rect_x + rect_w + 10)
     axes[3].set_ylim(0, rect_y + rect_h + 10)
-    axes[3].set_title(f"{title}{diff_custom:.2f}\nBackground Patch - Number Patch")
+    axes[3].set_title(f"{title}{diff_custom:.2f}\nBackground Spot - Number Spot")
     axes[3].axis("off")
 
 
-    plt.suptitle(f"C best = {global_cost:.2f}")
+    plt.suptitle(f"C best = {global_cost:.2f}", fontweight="bold", fontsize=14)
+    plt.tight_layout()
+    plt.show()
+
+
+def show_rgb_custom_illuminant_gray(reflectance, wavelengths, customIlluminant, spots, cost_function, global_cost):
+    title = "Michelson contrast: "
+    values_d65 = spim2gray(reflectance, wavelengths, 'D65', np.nan, np.nan)
+    values_custom = spim2gray(reflectance, wavelengths, customIlluminant, np.nan, np.nan)
+
+
+    diff_D65 = get_cost_between_spots(values_d65, spots[0], spots[1], cost_function)
+    diff_custom = get_cost_between_spots(values_custom, spots[0], spots[1], cost_function)
+
+    spot_size = 20
+    _, axes = plt.subplots(2, 2)
+    axes = axes.flatten()
+    axes[0].imshow(values_d65, cmap="gray")
+    axes[0].scatter([spots[0][1]], [spots[0][0]], s=spot_size, facecolors='none',  edgecolors="#BB1C1C", linewidths=1.5)
+    axes[0].scatter([spots[1][1]],  [spots[1][0]],  s=spot_size, facecolors='none', edgecolors='#4AC22F', linewidths=1.5)
+    axes[0].set_title("RBG Image D65")
+    axes[0].axis("off")
+
+    axes[1].imshow(values_custom, cmap="gray")
+    axes[1].scatter([spots[0][1]], [spots[0][0]], s=spot_size, facecolors='none',  edgecolors='#BB1C1C', linewidths=1.5)
+    axes[1].scatter([spots[1][1]],  [spots[1][0]],  s=spot_size, facecolors='none', edgecolors='#4AC22F', linewidths=1.5)
+    axes[1].set_title("RBG Custom Illuminant")
+    axes[1].axis("off")
+
+
+    # Rectangle parameters
+    rect_x, rect_y = 10, 10   # position in plot coords
+    rect_w, rect_h = 50, 70   # width and height
+
+    color_1_D65 = values_d65[spots[1][0], spots[1][1]]
+    color_2_D65 = values_d65[spots[0][0], spots[0][1]]
+
+    rect_1_D65  = patches.Rectangle((rect_x, rect_y), rect_w/2, rect_h,
+                            linewidth=1, edgecolor='none', facecolor=str(color_1_D65))
+    rect_2_D65  = patches.Rectangle((rect_x + rect_w/2, rect_y), rect_w/2, rect_h,
+                            linewidth=1, edgecolor='none', facecolor=str(color_2_D65))
+    axes[2].add_patch(rect_1_D65)
+    axes[2].add_patch(rect_2_D65)
+    axes[2].set_xlim(0, rect_x + rect_w + 10)
+    axes[2].set_ylim(0, rect_y + rect_h + 10)
+    axes[2].set_title(f"{title}{diff_D65:.2f}\nBackground Spot - Number Spot")
+    axes[2].axis("off")
+
+
+    color_1_custom = values_d65[spots[1][0], spots[1][1]]
+    color_2_custom = values_d65[spots[0][0], spots[0][1]]
+
+    rect_1_custom  = patches.Rectangle((rect_x, rect_y), rect_w/2, rect_h,
+                            linewidth=1, edgecolor='none', facecolor=str(color_1_custom))
+    rect_2_custom  = patches.Rectangle((rect_x + rect_w/2, rect_y), rect_w/2, rect_h,
+                            linewidth=1, edgecolor='none', facecolor=str(color_2_custom))
+    axes[3].add_patch(rect_1_custom)
+    axes[3].add_patch(rect_2_custom)
+    axes[3].set_xlim(0, rect_x + rect_w + 10)
+    axes[3].set_ylim(0, rect_y + rect_h + 10)
+    axes[3].set_title(f"{title}{diff_custom:.2f}\nBackground Spot - Number Spot")
+    axes[3].axis("off")
+
+
+    plt.suptitle(f"C best = {global_cost:.2f}", fontweight="bold", fontsize=14)
     plt.tight_layout()
     plt.show()
 
@@ -102,8 +167,8 @@ def plot_spds(spds, wavelengths, labels):
     for spd, label in zip(spds, labels):
         plt.plot(wavelengths, spd, label=label)
     
-    plt.xlabel("Wavelength (nm)")
-    plt.ylabel("Relative Intensity")
-    plt.title("Spectral Power Disribution")
-    plt.legend()
+    plt.xlabel("Wavelength (nm)", fontsize=14)
+    plt.ylabel("Relative Intensity", fontsize=14)
+    plt.title("Spectral Power Disribution", fontsize=16)
+    plt.legend(fontsize=12)
     plt.show()

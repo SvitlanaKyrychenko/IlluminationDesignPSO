@@ -42,8 +42,8 @@ class CiedePSO(PSOCostFunction):
                 if rgb_invalid_mask_sample1[i] or rgb_invalid_mask_sample2[i]:
                     costs[i] = worst_value
                 else:
-                    sample1_lab = np.squeeze(XYZ2Lab(sample1_xyz[i]))
-                    sample2_lab = np.squeeze(XYZ2Lab(sample2_xyz[i]))
+                    sample1_lab = np.squeeze(XYZ2Lab(sample1_xyz[i], wavelength, cie_illuminant=simulated_illuminants[i]))
+                    sample2_lab = np.squeeze(XYZ2Lab(sample2_xyz[i], wavelength, cie_illuminant=simulated_illuminants[i]))
                     costs[i] = ciede(sample1_lab, sample2_lab)
 
             return costs

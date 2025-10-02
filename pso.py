@@ -78,7 +78,7 @@ class PSO:
 
         self.positions = self.rand.uniform(self.low_bound, self.high_bound, size=(self.config.n_particles, n_led)).astype(np.float64)
         self.apply_constrains()
-        self.velocities = self.rand.uniform(self.low_bound, self.high_bound, size=(self.config.n_particles, n_led)).astype(np.float64)
+        self.velocities = self.rand.uniform(-1, 1, size=(self.config.n_particles, n_led)).astype(np.float64)
         self.local_pos = self.positions.copy()
         self.local_cost = self.calculate_cost()
 
@@ -109,7 +109,11 @@ class PSO:
         self.local_pos[local_pos_mask] = self.positions[local_pos_mask].copy()
         self.local_cost[local_pos_mask] = curr_pos_cost[local_pos_mask].copy()
 
-        local_best_idx = int(np.argmin(self.local_cost))
+        if self.mode == OptimizeMode.MIN:
+            local_best_idx = int(np.argmin(self.local_cost))
+        else:
+            local_best_idx = int(np.argmax(self.local_cost))
+
         local_best_cost = float(self.local_cost[local_best_idx])
         curr_is_best_cost = self.find_best_cost(local_best_cost, self.global_cost)
 
@@ -144,9 +148,9 @@ class PSO:
 
     def worst_cost_value(self) -> float:
         if self.mode == OptimizeMode.MIN:
-            return float("inf")
+            return np.inf
         else:
-            return float("-inf")
+            return -np.inf
 
 
     def find_best_cost(self, cost1, cost2) -> bool:
